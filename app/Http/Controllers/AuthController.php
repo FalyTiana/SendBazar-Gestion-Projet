@@ -107,4 +107,22 @@ class AuthController extends Controller
             return response()->json(['message' => 'Identifiants incorrects'], 401);
         }
     }
+
+    // Méthode de déconnexion
+    public function logout(Request $request)
+    {
+        // Récupérer l'administrateur authentifié
+        $administrateur = Auth::user();
+
+        if ($administrateur) {
+            // Révoquer le token actuel utilisé par l'utilisateur
+            $request->user()->currentAccessToken()->delete();
+
+            return response()->json([
+                'message' => 'Déconnexion réussie',
+            ]);
+        }
+
+        return response()->json(['message' => 'Non authentifié'], 401);
+    }
 }

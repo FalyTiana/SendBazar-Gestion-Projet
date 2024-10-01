@@ -72,7 +72,7 @@ class AdministrateursController extends Controller
         }
 
         // Mettre à jour avec le nouveau mot de passe
-        $administrateur->mot_de_passe = Hash::make($request->nouveau_mot_de_passe);
+        $administrateur->mot_de_passe = $request->nouveau_mot_de_passe;
         $administrateur->save();
 
         return response()->json(['message' => 'Mot de passe mis à jour avec succès'], 200);

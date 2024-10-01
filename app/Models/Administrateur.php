@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 
 class Administrateur extends Model
 {
-    use HasFactory, HasApiTokens;
+    use HasApiTokens,HasFactory, HasApiTokens;
 
     protected $fillable = ['nom', 'email', 'telephone', 'poste', 'mot_de_passe', 'entreprise_id', 'email_verified_at'];
     protected $attributes = [
