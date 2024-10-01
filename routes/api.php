@@ -22,3 +22,4 @@ Route::middleware('auth:sanctum')->put('entreprises/{id}', [EntrepriseController
 Route::middleware('auth:sanctum')->put('administrateurs/profile', [AdministrateursController::class, 'updateProfile']);
 Route::middleware('auth:sanctum')->get('administrateurs/entreprise', [AdministrateursController::class, 'getEntreprise']);
 Route::middleware('auth:sanctum')->get('administrateurs/profile', [AdministrateursController::class, 'getProfile']);
+Route::middleware('auth:sanctum')->post('administrateurs/change-password', [AdministrateursController::class, 'changePassword']);

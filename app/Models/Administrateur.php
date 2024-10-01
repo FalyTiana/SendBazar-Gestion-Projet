@@ -33,4 +33,5 @@ class Administrateur extends Model
     {
         $this->attributes['mot_de_passe'] = Hash::make($value);
     }
+
 }

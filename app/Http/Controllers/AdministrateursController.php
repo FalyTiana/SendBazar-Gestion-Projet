@@ -49,6 +49,36 @@ class AdministrateursController extends Controller
         ]);
     }
 
+    // Méthode pour changer le mot de passe de l'administrateur
+    public function changePassword(Request $request)
+    {
+        // Récupérer l'administrateur authentifié via le garde 'admin'
+        $administrateur = Auth::user();
+
+        // Vérifier que l'administrateur est bien une instance du modèle
+        if (!$administrateur instanceof Administrateur) {
+            return response()->json(['message' => 'Administrateur non trouvé'], 404);
+        }
+
+        // Validation des champs
+        $request->validate([
+            'ancien_mot_de_passe' => 'required|string',
+            'nouveau_mot_de_passe' => 'required|string',
+        ]);
+
+        // Vérifier que l'ancien mot de passe est correct
+        if (!Hash::check($request->ancien_mot_de_passe, $administrateur->mot_de_passe)) {
+            return response()->json(['message' => 'Ancien mot de passe incorrect'], 401);
+        }
+
+        // Mettre à jour avec le nouveau mot de passe
+        $administrateur->mot_de_passe = Hash::make($request->nouveau_mot_de_passe);
+        $administrateur->save();
+
+        return response()->json(['message' => 'Mot de passe mis à jour avec succès'], 200);
+    }
+
+
     public function getEntreprise()
     {
         // Récupérer l'administrateur authentifié
