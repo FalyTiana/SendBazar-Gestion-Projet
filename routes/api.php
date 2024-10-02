@@ -12,15 +12,17 @@ Route::get('/user', function (Request $request) {
 
 Route::post('entreprises', [EntrepriseController::class, 'createEntreprise']);
 
-Route::post('register', [AuthController::class, 'register']);
-Route::post('verify-email', [AuthController::class, 'verifyEmail']);
+
+// Route::post('verify-email', [AuthController::class, 'verifyEmail']);
 Route::post('login', [AuthController::class, 'login']);
 
 // Route::get('entreprises', [EntrepriseController::class, 'getAllEntreprises']);
 
+
+Route::middleware('auth:sanctum')->post('register', [AuthController::class, 'register']);
 Route::middleware('auth:sanctum')->put('entreprises/{id}', [EntrepriseController::class, 'updateEntreprise']);
 Route::middleware('auth:sanctum')->put('administrateurs/profile', [AdministrateursController::class, 'updateProfile']);
 Route::middleware('auth:sanctum')->get('administrateurs/entreprise', [AdministrateursController::class, 'getEntreprise']);
 Route::middleware('auth:sanctum')->get('administrateurs/profile', [AdministrateursController::class, 'getProfile']);
 Route::middleware('auth:sanctum')->post('administrateurs/change-password', [AdministrateursController::class, 'changePassword']);
-Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
+Route::middleware('auth:sanctum')->get('logout', [AuthController::class, 'logout']);

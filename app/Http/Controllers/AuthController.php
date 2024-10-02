@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Administrateur;
+use App\Models\AdministrateurSupeur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -12,69 +13,149 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     // Méthode d'inscription avec envoi de code de vérification
+    // public function register(Request $request)
+    // {
+    //     // Validation des données
+    //     $request->validate([
+    //         'email' => 'required|email|unique:administrateurs',
+    //         'mot_de_passe' => 'required',
+    //     ]);
+
+    //     // Créer un nouvel administrateur
+    //     $administrateur = Administrateur::create([
+    //         'email' => $request->email,
+    //         'mot_de_passe' => $request->mot_de_passe, // Le mutator va hacher automatiquement
+    //         'nom' => $request->nom ?? null,
+    //         'telephone' => $request->telephone ?? null,
+    //         'poste' => $request->poste ?? null,
+    //         'entreprise_id' => $request->entreprise_id,
+    //     ]);
+
+    //     // Générer un code de vérification aléatoire
+    //     $verificationCode = Str::random(6);
+
+    //     // Enregistrer le code dans un champ temporaire (ou dans une table séparée si nécessaire)
+    //     $administrateur->verification_code = $verificationCode;
+    //     $administrateur->save();
+
+    //     // Envoyer le code à l'email de l'utilisateur
+    //     Mail::raw("Votre code de vérification est : $verificationCode", function ($message) use ($request) {
+    //         $message->to($request->email)
+    //             ->subject('Code de vérification de votre compte');
+    //     });
+
+    //     return response()->json(['message' => 'Un code de vérification a été envoyé à votre adresse e-mail.']);
+    // }
+
     public function register(Request $request)
     {
-        // Validation des données
-        $request->validate([
-            'email' => 'required|email|unique:administrateurs',
-            'mot_de_passe' => 'required',
-        ]);
+        try {
 
-        // Créer un nouvel administrateur
-        $administrateur = Administrateur::create([
-            'email' => $request->email,
-            'mot_de_passe' => $request->mot_de_passe, // Le mutator va hacher automatiquement
-            'nom' => $request->nom ?? null,
-            'telephone' => $request->telephone ?? null,
-            'poste' => $request->poste ?? null,
-            'entreprise_id' => $request->entreprise_id,
-        ]);
+            // On s'assure que l'utilisateur est authentifié via Sanctum
+            $administrateurSupeur = Auth::user();
+            if (!$administrateurSupeur instanceof AdministrateurSupeur) {
+                return response()->json(['error' => 'Utilisateur non autorisé'], 403);
+            }
+            // Validation des données
+            $request->validate([
+                'nom' => 'required',
+                'email' => 'required|email|unique:administrateurs', // Vérification de l'unicité de l'email
+            ]);
 
-        // Générer un code de vérification aléatoire
-        $verificationCode = Str::random(6);
+            // Vérifier si l'entreprise a déjà un administrateur
+            $existingAdmin = Administrateur::where('entreprise_id', $request->entreprise_id)->first();
+            if ($existingAdmin) {
+                return response()->json(['message' => 'Cette entreprise a déjà un administrateur.'], 400);
+            }
 
-        // Enregistrer le code dans un champ temporaire (ou dans une table séparée si nécessaire)
-        $administrateur->verification_code = $verificationCode;
-        $administrateur->save();
+            // Générer un mot de passe aléatoire
+            $mot_de_passe = Str::random(8);
 
-        // Envoyer le code à l'email de l'utilisateur
-        Mail::raw("Votre code de vérification est : $verificationCode", function ($message) use ($request) {
-            $message->to($request->email)
-                ->subject('Code de vérification de votre compte');
-        });
+            // Créer un nouvel administrateur
+            $administrateur = Administrateur::create([
+                'email' => $request->email,
+                'mot_de_passe' => $mot_de_passe, // Le mutator va hacher automatiquement
+                'nom' => $request->nom ?? null,
+                'telephone' => $request->telephone ?? null,
+                'poste' => $request->poste ?? null,
+                'entreprise_id' => $request->entreprise_id,
+            ]);
 
-        return response()->json(['message' => 'Un code de vérification a été envoyé à votre adresse e-mail.']);
-    }
-
-    // Méthode de vérification du code et génération de token JWT
-    public function verifyEmail(Request $request)
-    {
-        // Validation du code
-        $request->validate([
-            'email' => 'required|email',
-            'verification_code' => 'required',
-        ]);
-
-        // Trouver l'utilisateur via l'email
-        $administrateur = Administrateur::where('email', $request->email)->first();
-
-        // Vérifier si le code est correct
-        if ($administrateur && $administrateur->verification_code === $request->verification_code) {
-            // Code correct, générer un token JWT
-            // $token = $administrateur->createToken('auth_token')->plainTextToken;
-
-            // Supprimer le code de vérification
-            $administrateur->verification_code = null;
-            $administrateur->email_verified_at = now();
+            // Enregistrer l'administrateur
             $administrateur->save();
 
+            // Envoyer le mot de passe par email à l'administrateur
+            Mail::raw(
+                "Bonjour {$request->nom},
+    
+    Votre compte administrateur a été créé avec succès.
+    
+    Voici vos informations de connexion :
+    
+    Email : {$request->email}
+    Mot de passe : {$mot_de_passe}
+    
+    Nous vous recommandons de changer votre mot de passe dès votre première connexion.
+    
+    Merci de faire partie de notre équipe !
+    
+    Cordialement,
+    L'équipe de gestion",
+                function ($message) use ($request) {
+                    $message->to($request->email)
+                        ->subject('Création de votre compte administrateur');
+                }
+            );
+
+            // Réponse en cas de succès
             return response()->json([
-                'message' => 'Email vérifié avec succès',
-            ]);
-        } else {
-            return response()->json(['message' => 'Code de vérification incorrect'], 401);
+                'message' => 'Le compte a été créé avec succès. Un email contenant less informations de connexion a été envoyé à l\'adresse.'
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Gérer les erreurs de validation
+            return response()->json([
+                'message' => 'Erreur de validation des données.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            // Gérer les autres erreurs, comme l'email déjà utilisé
+            return response()->json([
+                'message' => 'Une erreur est survenue lors de la création du compte. Veuillez réessayer plus tard.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
+
+    // Méthode de vérification du code et génération de token JWT
+    // public function verifyEmail(Request $request)
+    // {
+    //     // Validation du code
+    //     $request->validate([
+    //         'email' => 'required|email',
+    //         'verification_code' => 'required',
+    //     ]);
+
+    //     // Trouver l'utilisateur via l'email
+    //     $administrateur = Administrateur::where('email', $request->email)->first();
+
+    //     // Vérifier si le code est correct
+    //     if ($administrateur && $administrateur->verification_code === $request->verification_code) {
+    //         // Code correct, générer un token JWT
+    //         // $token = $administrateur->createToken('auth_token')->plainTextToken;
+
+    //         // Supprimer le code de vérification
+    //         $administrateur->verification_code = null;
+    //         $administrateur->email_verified_at = now();
+    //         $administrateur->save();
+
+    //         return response()->json([
+    //             'message' => 'Email vérifié avec succès',
+    //         ]);
+    //     } else {
+    //         return response()->json(['message' => 'Code de vérification incorrect'], 401);
+    //     }
+    // }
 
     public function login(Request $request)
     {
@@ -85,21 +166,28 @@ class AuthController extends Controller
         ]);
 
         // Trouver l'utilisateur par email
+        $administrateurSupeur = AdministrateurSupeur::where('email', $request->email)->first();
         $administrateur = Administrateur::where('email', $request->email)->first();
 
-        // Vérifier si l'utilisateur existe, si l'email est vérifié et si le mot de passe est correct
-        if ($administrateur && Hash::check($request->mot_de_passe, $administrateur->mot_de_passe)) {
-            if (!$administrateur->email_verified_at) {
-                // Si l'email n'est pas vérifié, renvoyer une erreur
-                return response()->json(['message' => 'Votre email n\'a pas été vérifié.'], 403);
-            }
-
+        // Vérifier si l'utilisateur existe et si le mot de passe est correct
+        if ($administrateurSupeur && Hash::check($request->mot_de_passe, $administrateurSupeur->mot_de_passe)) {
             // Si tout est correct, générer un token
-            $token = $administrateur->createToken('auth_token')->plainTextToken;
+            $token = $administrateurSupeur->createToken('auth_token', ['role' => 'adminSuper'])->plainTextToken;
 
             return response()->json([
                 'message' => 'Connexion réussie',
                 'token' => $token,
+                'rôle' => 'adminSuper',
+                'administrateur' => $administrateurSupeur
+            ]);
+        } elseif ($administrateur && Hash::check($request->mot_de_passe, $administrateur->mot_de_passe)) {
+            // Si tout est correct, générer un token
+            $token = $administrateur->createToken('auth_token', ['role' => 'admin'])->plainTextToken;
+
+            return response()->json([
+                'message' => 'Connexion réussie',
+                'token' => $token,
+                'rôle' => 'admin',
                 'administrateur' => $administrateur
             ]);
         } else {
