@@ -64,7 +64,7 @@ class EntrepriseController extends Controller
         $entreprise = Entreprise::findOrFail($id);
 
         // Vérifier que l'administrateur est bien lié à cette entreprise
-        if ($entreprise->id !== $administrateur->entreprise_id) {
+        if ($entreprise->id != $administrateur->entreprise_id) {
             return response()->json(['message' => 'Vous n\'êtes pas autorisé à modifier cette entreprise'], 403);
         }
 
