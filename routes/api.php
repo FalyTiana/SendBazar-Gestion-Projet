@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\AdministrateursController;
+use App\Http\Controllers\EmployeController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -25,3 +26,5 @@ Route::middleware('auth:sanctum')->get('administrateurs/entreprise', [Administra
 Route::middleware('auth:sanctum')->get('administrateurs/profile', [AdministrateursController::class, 'getProfile']);
 Route::middleware('auth:sanctum')->post('administrateurs/change-password', [AdministrateursController::class, 'changePassword']);
 Route::middleware('auth:sanctum')->get('logout', [AuthController::class, 'logout']);
+
+Route::middleware('auth:sanctum')->get('/entreprises/{id_entreprise}/employes', [EmployeController::class, 'getAll']);

@@ -110,7 +110,8 @@ class AuthController extends Controller
 
             // Réponse en cas de succès
             return response()->json([
-                'message' => 'Le compte a été créé avec succès. Un email contenant less informations de connexion a été envoyé à l\'adresse.'
+                'message' => 'Le compte a été créé avec succès.'
+                // 'message' => 'Le compte a été créé avec succès. Un email contenant less informations de connexion a été envoyé à l\'adresse.'
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Gérer les erreurs de validation
@@ -224,6 +225,12 @@ class AuthController extends Controller
             if (!$administrateur instanceof Administrateur) {
                 return response()->json(['error' => 'Utilisateur non autorisé'], 403);
             }
+
+            // Vérification que l'administrateur est bien l'administrateur de l'entreprise
+            if ($administrateur->entreprise_id !== $request->entreprise_id) {
+                return response()->json(['error' => 'Vous n\'êtes pas autorisé à inviter des employés pour cette entreprise'], 403);
+            }
+
             // Validation des données
             $request->validate([
                 'nom' => 'required',
@@ -273,7 +280,8 @@ L'équipe de gestion de {$administrateur->entreprise->nom}",
 
             // Réponse en cas de succès
             return response()->json([
-                'message' => 'Le compte a été créé avec succès. Un email contenant les informations de connexion a été envoyé à l\'adresse.'
+                // 'message' => 'Le compte a été créé avec succès. Un email contenant les informations de connexion a été envoyé à l\'adresse.'
+                'message' => 'Le compte a été créé avec succès.'
             ], 201);
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Gérer les erreurs de validation
