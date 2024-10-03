@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Administrateur;
 use App\Models\AdministrateurSupeur;
+use App\Models\Employe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -212,5 +213,80 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => 'Non authentifié'], 401);
+    }
+
+    public function invitation(Request $request)
+    {
+        try {
+
+            // On s'assure que l'utilisateur est authentifié via Sanctum
+            $administrateur = Auth::user();
+            if (!$administrateur instanceof Administrateur) {
+                return response()->json(['error' => 'Utilisateur non autorisé'], 403);
+            }
+            // Validation des données
+            $request->validate([
+                'nom' => 'required',
+                'email' => 'required|email|unique:administrateurs', // Vérification de l'unicité de l'email
+            ]);
+
+
+            // Générer un mot de passe aléatoire
+            $mot_de_passe = Str::random(8);
+
+            // Créer un nouvel employé
+            $employe = Employe::create([
+                'email' => $request->email,
+                'mot_de_passe' => $mot_de_passe, // Le mutator va hacher automatiquement
+                'nom' => $request->nom ?? null,
+                'telephone' => $request->telephone ?? null,
+                'poste' => $request->poste ?? null,
+                'entreprise_id' => $request->entreprise_id,
+            ]);
+
+            // Enregistrer l'employé
+            $employe->save();
+
+            // Envoyer le mot de passe par email à l'employé
+            Mail::raw(
+                "Bonjour {$request->nom},
+
+Nous sommes heureux de vous informer que votre compte employé au sein de l'entreprise {$administrateur->entreprise->nom} a été créé avec succès.
+
+Voici vos informations de connexion :
+
+- **Email** : {$request->email}
+- **Mot de passe temporaire** : {$mot_de_passe}
+
+Nous vous recommandons vivement de changer ce mot de passe lors de votre première connexion pour garantir la sécurité de votre compte.
+
+Bienvenue dans notre équipe chez {$administrateur->entreprise->nom} ! Nous sommes ravis de vous compter parmi nous et espérons que vous apprécierez cette nouvelle aventure professionnelle.
+
+Cordialement,
+
+L'équipe de gestion de {$administrateur->entreprise->nom}",
+                function ($message) use ($request, $administrateur) {
+                    $message->to($request->email)
+                        ->subject('Invitation à rejoindre l\'équipe de ' . $administrateur->entreprise->nom);
+                }
+            );
+
+            // Réponse en cas de succès
+            return response()->json([
+                'message' => 'Le compte a été créé avec succès. Un email contenant les informations de connexion a été envoyé à l\'adresse.'
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Gérer les erreurs de validation
+            return response()->json([
+                'message' => 'Erreur de validation des données.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            // Gérer les autres erreurs, comme l'email déjà utilisé
+            return response()->json([
+                'message' => 'Une erreur est survenue lors de la création du compte. Veuillez réessayer plus tard.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

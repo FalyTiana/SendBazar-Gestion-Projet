@@ -14,6 +14,7 @@ Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->post('entreprises', [EntrepriseController::class, 'createEntreprise']);
 Route::middleware('auth:sanctum')->post('register', [AuthController::class, 'register']);
+Route::middleware('auth:sanctum')->post('invitation', [AuthController::class, 'invitation']);
 
 Route::middleware('auth:sanctum')->get('entreprises', [EntrepriseController::class, 'getAllEntreprises']);
 Route::middleware('auth:sanctum')->delete('entreprises/{id}', [EntrepriseController::class, 'deleteEntrepriseById']);

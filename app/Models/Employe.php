@@ -11,13 +11,12 @@ class Employe extends Model
 {
     use HasApiTokens,HasFactory, HasApiTokens;
 
-    protected $fillable = ['nom', 'email', 'telephone', 'poste', 'mot_de_passe', 'entreprise_id', 'email_verified_at'];
+    protected $fillable = ['nom', 'email', 'telephone', 'poste', 'mot_de_passe', 'entreprise_id'];
     protected $attributes = [
         'nom' => null,
         'telephone' => null,
         'poste' => null,
         'entreprise_id' => null,
-        'email_verified_at' => null,
     ];
 
     protected $hidden = ['mot_de_passe', 'created_at', 'updated_at'];
