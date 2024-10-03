@@ -10,17 +10,15 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('entreprises', [EntrepriseController::class, 'createEntreprise']);
-
-
-// Route::post('verify-email', [AuthController::class, 'verifyEmail']);
 Route::post('login', [AuthController::class, 'login']);
 
-// Route::get('entreprises', [EntrepriseController::class, 'getAllEntreprises']);
-
-
+Route::middleware('auth:sanctum')->post('entreprises', [EntrepriseController::class, 'createEntreprise']);
 Route::middleware('auth:sanctum')->post('register', [AuthController::class, 'register']);
+
+Route::middleware('auth:sanctum')->get('entreprises', [EntrepriseController::class, 'getAllEntreprises']);
+Route::middleware('auth:sanctum')->delete('entreprises/{id}', [EntrepriseController::class, 'deleteEntrepriseById']);
 Route::middleware('auth:sanctum')->put('entreprises/{id}', [EntrepriseController::class, 'updateEntreprise']);
+
 Route::middleware('auth:sanctum')->put('administrateurs/profile', [AdministrateursController::class, 'updateProfile']);
 Route::middleware('auth:sanctum')->get('administrateurs/entreprise', [AdministrateursController::class, 'getEntreprise']);
 Route::middleware('auth:sanctum')->get('administrateurs/profile', [AdministrateursController::class, 'getProfile']);

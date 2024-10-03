@@ -11,9 +11,14 @@ class Entreprise extends Model
 
     protected $fillable = ['nom'];
 
-    // Relation One-to-One avec Administrateur
-    public function administrateur()
+    // Relation One-to-Many avec Administrateur
+    public function administrateurs()
     {
-        return $this->hasOne(Administrateur::class);
+        return $this->hasMany(Administrateur::class);
+    }
+    // Relation One-to-Many avec Administrateur
+    public function employes()
+    {
+        return $this->hasMany(employe::class);
     }
 }

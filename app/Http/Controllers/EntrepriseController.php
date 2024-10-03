@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdministrateurSupeur;
 use App\Models\Entreprise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,9 +12,16 @@ class EntrepriseController extends Controller
     // Méthode pour créer une entreprise
     public function createEntreprise(Request $request)
     {
+
+        // On s'assure que l'utilisateur est authentifié via Sanctum
+        $administrateurSupeur = Auth::user();
+        if (!$administrateurSupeur instanceof AdministrateurSupeur) {
+            return response()->json(['error' => 'Utilisateur non autorisé'], 403);
+        }
+
         // Validation (nom non obligatoire)
         $request->validate([
-            'nom' => 'nullable|string|max:255'// Aucune validation obligatoire pour le nom
+            'nom' => 'nullable|string|max:255' // Aucune validation obligatoire pour le nom
         ]);
 
         // Créer l'entreprise
@@ -30,10 +38,17 @@ class EntrepriseController extends Controller
 
     public function getAllEntreprises()
     {
-        // Récupérer toutes les entreprises
-        $entreprises = Entreprise::all();
 
-        // Retourner les entreprises dans une réponse JSON
+        // On s'assure que l'utilisateur est authentifié via Sanctum
+        $administrateurSupeur = Auth::user();
+        if (!$administrateurSupeur instanceof AdministrateurSupeur) {
+            return response()->json(['error' => 'Utilisateur non autorisé'], 403);
+        }
+
+        // Récupérer les entreprises qui ont des administrateurs associés
+        $entreprises = Entreprise::whereHas('administrateurs')->with('administrateurs')->get();
+
+        // Retourner les entreprises et leurs administrateurs dans une réponse JSON
         return response()->json([
             'message' => 'Liste des entreprises récupérée avec succès',
             'entreprises' => $entreprises
@@ -72,5 +87,35 @@ class EntrepriseController extends Controller
             'message' => 'Informations de l\'entreprise mises à jour avec succès',
             'entreprise' => $entreprise
         ]);
+    }
+
+    public function deleteEntrepriseById($id)
+    {
+        // On s'assure que l'utilisateur est authentifié via Sanctum
+        $administrateurSupeur = Auth::user();
+        if (!$administrateurSupeur instanceof AdministrateurSupeur) {
+            return response()->json(['error' => 'Utilisateur non autorisé'], 403);
+        }
+
+        // Rechercher l'entreprise par son ID
+        $entreprise = Entreprise::find($id);
+
+        // Vérifier si l'entreprise existe
+        if (!$entreprise) {
+            return response()->json([
+                'message' => 'Entreprise non trouvée'
+            ], 404); // Retourner une réponse 404 si l'entreprise n'existe pas
+        }
+
+        // Supprimer les administrateurs associés
+        $entreprise->administrateurs()->delete(); // Notez l'utilisation de "administrateurs" ici
+
+        // Supprimer l'entreprise
+        $entreprise->delete();
+
+        // Retourner une réponse de succès
+        return response()->json([
+            'message' => 'Entreprise et administrateurs supprimés avec succès'
+        ], 200); // Retourner une réponse 200 en cas de succès
     }
 }
