@@ -110,6 +110,9 @@ class EntrepriseController extends Controller
         // Supprimer les administrateurs associés
         $entreprise->administrateurs()->delete(); // Notez l'utilisation de "administrateurs" ici
 
+        // Supprimer les employes associés
+        $entreprise->employes()->delete();
+
         // Supprimer l'entreprise
         $entreprise->delete();
 

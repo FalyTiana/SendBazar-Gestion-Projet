@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Administrateur;
 use App\Models\AdministrateurSupeur;
 use App\Models\Employe;
+use App\Models\Entreprise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -170,27 +171,50 @@ class AuthController extends Controller
         // Trouver l'utilisateur par email
         $administrateurSupeur = AdministrateurSupeur::where('email', $request->email)->first();
         $administrateur = Administrateur::where('email', $request->email)->first();
+        $employe = Employe::where('email', $request->email)->first();
 
         // Vérifier si l'utilisateur existe et si le mot de passe est correct
         if ($administrateurSupeur && Hash::check($request->mot_de_passe, $administrateurSupeur->mot_de_passe)) {
             // Si tout est correct, générer un token
+            $entreprise = Entreprise::find($administrateurSupeur->entreprise_id);
+            $nom_entreprise = $entreprise ? $entreprise->nom : null;
+
             $token = $administrateurSupeur->createToken('auth_token', ['role' => 'adminSuper'])->plainTextToken;
 
             return response()->json([
                 'message' => 'Connexion réussie',
                 'token' => $token,
                 'rôle' => 'adminSuper',
-                'administrateur' => $administrateurSupeur
+                'utilisateur' => $administrateurSupeur,
+                'nom_entreprise' => $nom_entreprise
             ]);
         } elseif ($administrateur && Hash::check($request->mot_de_passe, $administrateur->mot_de_passe)) {
             // Si tout est correct, générer un token
+            $entreprise = Entreprise::find($administrateur->entreprise_id);
+            $nom_entreprise = $entreprise ? $entreprise->nom : null;
+
             $token = $administrateur->createToken('auth_token', ['role' => 'admin'])->plainTextToken;
 
             return response()->json([
                 'message' => 'Connexion réussie',
                 'token' => $token,
                 'rôle' => 'admin',
-                'administrateur' => $administrateur
+                'utilisateur' => $administrateur,
+                'nom_entreprise' => $nom_entreprise
+            ]);
+        } elseif ($employe && Hash::check($request->mot_de_passe, $employe->mot_de_passe)) {
+            // Si tout est correct, générer un token
+            $entreprise = Entreprise::find($employe->entreprise_id);
+            $nom_entreprise = $entreprise ? $entreprise->nom : null;
+
+            $token = $employe->createToken('auth_token', ['role' => 'employe'])->plainTextToken;
+
+            return response()->json([
+                'message' => 'Connexion réussie',
+                'token' => $token,
+                'rôle' => 'employe',
+                'utilisateur' => $employe,
+                'nom_entreprise' => $nom_entreprise
             ]);
         } else {
             // Si les informations ne sont pas correctes, renvoyer une erreur
@@ -227,7 +251,7 @@ class AuthController extends Controller
             }
 
             // Vérification que l'administrateur est bien l'administrateur de l'entreprise
-            if ($administrateur->entreprise_id !== $request->entreprise_id) {
+            if ($administrateur->entreprise_id != $request->entreprise_id) {
                 return response()->json(['error' => 'Vous n\'êtes pas autorisé à inviter des employés pour cette entreprise'], 403);
             }
 

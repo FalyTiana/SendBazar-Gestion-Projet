@@ -28,3 +28,7 @@ Route::middleware('auth:sanctum')->post('administrateurs/change-password', [Admi
 Route::middleware('auth:sanctum')->get('logout', [AuthController::class, 'logout']);
 
 Route::middleware('auth:sanctum')->get('/entreprises/{id_entreprise}/employes', [EmployeController::class, 'getAll']);
+Route::middleware('auth:sanctum')->delete('employes/{id}', [EmployeController::class, 'deleteEmployeById']);
+Route::middleware('auth:sanctum')->put('employes/profile', [EmployeController::class, 'updateProfile']);
+Route::middleware('auth:sanctum')->post('employes/change-password', [EmployeController::class, 'changePassword']);
+
