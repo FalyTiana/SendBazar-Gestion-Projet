@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -31,6 +32,17 @@ class Employe extends Model
     public function setMotDePasseAttribute($value)
     {
         $this->attributes['mot_de_passe'] = Hash::make($value);
+    }
+    // Un employé peut être chef de plusieurs projets
+    public function projetsCommeChef(): BelongsToMany
+    {
+        return $this->belongsToMany(Projet::class, 'chef_projet');
+    }
+
+    // Un employé peut être membre de plusieurs projets
+    public function projetsCommeMembre(): BelongsToMany
+    {
+        return $this->belongsToMany(Projet::class, 'membre_projet');
     }
 
 }

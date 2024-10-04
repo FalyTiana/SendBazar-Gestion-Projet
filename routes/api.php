@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\AdministrateursController;
 use App\Http\Controllers\EmployeController;
+use App\Http\Controllers\ProjetController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -32,3 +33,4 @@ Route::middleware('auth:sanctum')->delete('employes/{id}', [EmployeController::c
 Route::middleware('auth:sanctum')->put('employes/profile', [EmployeController::class, 'updateProfile']);
 Route::middleware('auth:sanctum')->post('employes/change-password', [EmployeController::class, 'changePassword']);
 
+Route::post('projets',[ProjetController::class, 'creerProjet']);

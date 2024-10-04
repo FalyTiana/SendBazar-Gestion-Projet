@@ -258,7 +258,7 @@ class AuthController extends Controller
             // Validation des données
             $request->validate([
                 'nom' => 'required',
-                'email' => 'required|email|unique:administrateurs', // Vérification de l'unicité de l'email
+                'email' => 'required|email|unique:employes', // Vérification de l'unicité de l'email
             ]);
 
 
