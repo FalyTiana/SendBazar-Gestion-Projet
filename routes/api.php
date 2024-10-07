@@ -13,6 +13,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('login', [AuthController::class, 'login']);
+Route::middleware('auth:sanctum')->get('logout', [AuthController::class, 'logout']);
 
 Route::middleware('auth:sanctum')->post('entreprises', [EntrepriseController::class, 'createEntreprise']);
 Route::middleware('auth:sanctum')->post('register', [AuthController::class, 'register']);
@@ -26,11 +27,11 @@ Route::middleware('auth:sanctum')->put('administrateurs/profile', [Administrateu
 Route::middleware('auth:sanctum')->get('administrateurs/entreprise', [AdministrateursController::class, 'getEntreprise']);
 Route::middleware('auth:sanctum')->get('administrateurs/profile', [AdministrateursController::class, 'getProfile']);
 Route::middleware('auth:sanctum')->post('administrateurs/change-password', [AdministrateursController::class, 'changePassword']);
-Route::middleware('auth:sanctum')->get('logout', [AuthController::class, 'logout']);
 
 Route::middleware('auth:sanctum')->get('/entreprises/{id_entreprise}/employes', [EmployeController::class, 'getAll']);
 Route::middleware('auth:sanctum')->delete('employes/{id}', [EmployeController::class, 'deleteEmployeById']);
 Route::middleware('auth:sanctum')->put('employes/profile', [EmployeController::class, 'updateProfile']);
 Route::middleware('auth:sanctum')->post('employes/change-password', [EmployeController::class, 'changePassword']);
 
-Route::post('projets',[ProjetController::class, 'creerProjet']);
+Route::middleware('auth:sanctum')->post('projets',[ProjetController::class, 'creerProjet']);
+Route::middleware('auth:sanctum')->get('/entreprises/{id_entreprise}/projets', [ProjetController::class, 'getAll']);

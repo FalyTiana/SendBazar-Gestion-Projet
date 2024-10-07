@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -61,7 +62,13 @@ class AuthController extends Controller
             // Validation des données
             $request->validate([
                 'nom' => 'required',
-                'email' => 'required|email|unique:administrateurs', // Vérification de l'unicité de l'email
+                // 'email' => 'required|email|unique:administrateurs', // Vérification de l'unicité de l'email
+                'email' => [
+                    'required',
+                    'email',
+                    Rule::unique('administrateurs'),
+                    Rule::unique('employes'),
+                ],
             ]);
 
             // Vérifier si l'entreprise a déjà un administrateur
@@ -85,6 +92,19 @@ class AuthController extends Controller
 
             // Enregistrer l'administrateur
             $administrateur->save();
+
+            // Créer un nouvel employé
+            $employe = Employe::create([
+                'email' => $request->email,
+                'mot_de_passe' => $mot_de_passe, // Le mutator va hacher automatiquement
+                'nom' => $request->nom ?? null,
+                'telephone' => $request->telephone ?? null,
+                'poste' => $request->poste ?? null,
+                'entreprise_id' => $request->entreprise_id,
+            ]);
+
+            // Enregistrer l'employé
+            $employe->save();
 
             // Envoyer le mot de passe par email à l'administrateur
             Mail::raw(
@@ -162,82 +182,99 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // Valider l'email et le mot de passe
-        $request->validate([
-            'email' => 'required|email',
-            'mot_de_passe' => 'required',
-        ]);
-
-        // Trouver l'utilisateur par email
-        $administrateurSupeur = AdministrateurSupeur::where('email', $request->email)->first();
-        $administrateur = Administrateur::where('email', $request->email)->first();
-        $employe = Employe::where('email', $request->email)->first();
-
-        // Vérifier si l'utilisateur existe et si le mot de passe est correct
-        if ($administrateurSupeur && Hash::check($request->mot_de_passe, $administrateurSupeur->mot_de_passe)) {
-            // Si tout est correct, générer un token
-            $entreprise = Entreprise::find($administrateurSupeur->entreprise_id);
-            $nom_entreprise = $entreprise ? $entreprise->nom : null;
-
-            $token = $administrateurSupeur->createToken('auth_token', ['role' => 'adminSuper'])->plainTextToken;
-
-            return response()->json([
-                'message' => 'Connexion réussie',
-                'token' => $token,
-                'rôle' => 'adminSuper',
-                'utilisateur' => $administrateurSupeur,
-                'nom_entreprise' => $nom_entreprise
+        try {
+            // Valider l'email et le mot de passe
+            $request->validate([
+                'email' => 'required|email',
+                'mot_de_passe' => 'required',
             ]);
-        } elseif ($administrateur && Hash::check($request->mot_de_passe, $administrateur->mot_de_passe)) {
-            // Si tout est correct, générer un token
-            $entreprise = Entreprise::find($administrateur->entreprise_id);
-            $nom_entreprise = $entreprise ? $entreprise->nom : null;
 
-            $token = $administrateur->createToken('auth_token', ['role' => 'admin'])->plainTextToken;
+            // Trouver l'utilisateur par email
+            $administrateurSupeur = AdministrateurSupeur::where('email', $request->email)->first();
+            $administrateur = Administrateur::where('email', $request->email)->first();
+            $employe = Employe::where('email', $request->email)->first();
 
+            // Vérifier si l'utilisateur existe et si le mot de passe est correct
+            if ($administrateurSupeur && Hash::check($request->mot_de_passe, $administrateurSupeur->mot_de_passe)) {
+                // Si tout est correct, générer un token
+                $entreprise = Entreprise::find($administrateurSupeur->entreprise_id);
+                $nom_entreprise = $entreprise ? $entreprise->nom : null;
+
+                $token = $administrateurSupeur->createToken('auth_token', ['role' => 'adminSuper'])->plainTextToken;
+
+                return response()->json([
+                    'message' => 'Connexion réussie',
+                    'token' => $token,
+                    'rôle' => 'adminSuper',
+                    'utilisateur' => $administrateurSupeur,
+                    'nom_entreprise' => $nom_entreprise
+                ]);
+            } elseif ($administrateur && Hash::check($request->mot_de_passe, $administrateur->mot_de_passe)) {
+                // Si tout est correct, générer un token
+                $entreprise = Entreprise::find($administrateur->entreprise_id);
+                $nom_entreprise = $entreprise ? $entreprise->nom : null;
+                $employe = Employe::where('email', $administrateur->email)->first();
+
+                $token = $administrateur->createToken('auth_token', ['role' => 'admin'])->plainTextToken;
+
+                return response()->json([
+                    'message' => 'Connexion réussie',
+                    'token' => $token,
+                    'rôle' => 'admin',
+                    'utilisateur' => $employe,
+                    'nom_entreprise' => $nom_entreprise
+                ]);
+            } elseif ($employe && Hash::check($request->mot_de_passe, $employe->mot_de_passe)) {
+                // Si tout est correct, générer un token
+                $entreprise = Entreprise::find($employe->entreprise_id);
+                $nom_entreprise = $entreprise ? $entreprise->nom : null;
+
+                $token = $employe->createToken('auth_token', ['role' => 'employe'])->plainTextToken;
+
+                return response()->json([
+                    'message' => 'Connexion réussie',
+                    'token' => $token,
+                    'rôle' => 'employe',
+                    'utilisateur' => $employe,
+                    'nom_entreprise' => $nom_entreprise
+                ]);
+            } else {
+                // Si les informations ne sont pas correctes, renvoyer une erreur
+                return response()->json(['message' => 'Identifiants incorrects'], 401);
+            }
+        } catch (\Exception $e) {
+            // Gérer les erreurs
             return response()->json([
-                'message' => 'Connexion réussie',
-                'token' => $token,
-                'rôle' => 'admin',
-                'utilisateur' => $administrateur,
-                'nom_entreprise' => $nom_entreprise
-            ]);
-        } elseif ($employe && Hash::check($request->mot_de_passe, $employe->mot_de_passe)) {
-            // Si tout est correct, générer un token
-            $entreprise = Entreprise::find($employe->entreprise_id);
-            $nom_entreprise = $entreprise ? $entreprise->nom : null;
-
-            $token = $employe->createToken('auth_token', ['role' => 'employe'])->plainTextToken;
-
-            return response()->json([
-                'message' => 'Connexion réussie',
-                'token' => $token,
-                'rôle' => 'employe',
-                'utilisateur' => $employe,
-                'nom_entreprise' => $nom_entreprise
-            ]);
-        } else {
-            // Si les informations ne sont pas correctes, renvoyer une erreur
-            return response()->json(['message' => 'Identifiants incorrects'], 401);
+                'message' => 'Une erreur est survenue',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 
     // Méthode de déconnexion
     public function logout(Request $request)
     {
-        // Récupérer l'administrateur authentifié
-        $administrateur = Auth::user();
+        try {
+            // Récupérer l'utilisateur authentifié
+            $user = Auth::user();
 
-        if ($administrateur) {
-            // Révoquer le token actuel utilisé par l'utilisateur
-            $request->user()->currentAccessToken()->delete();
+            if ($user) {
+                // Révoquer le token actuel utilisé par l'utilisateur
+                $request->user()->currentAccessToken()->delete();
 
+                return response()->json([
+                    'message' => 'Déconnexion réussie',
+                ]);
+            }
+
+            return response()->json(['message' => 'Non authentifié'], 401);
+        } catch (\Exception $e) {
+            // Gérer les erreurs
             return response()->json([
-                'message' => 'Déconnexion réussie',
-            ]);
+                'message' => 'Une erreur est survenue',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json(['message' => 'Non authentifié'], 401);
     }
 
     public function invitation(Request $request)

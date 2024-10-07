@@ -30,4 +30,12 @@ class Projet extends Model
     {
         return $this->belongsToMany(Employe::class, 'membre_projet');
     }
+
+    // Fonction pour obtenir toutes les relations définies
+    public function loadAllRelations()
+    {
+        $relations = array_keys($this->getRelations());
+
+        return $this->with($relations);
+    }
 }
