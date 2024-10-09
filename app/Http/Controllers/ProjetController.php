@@ -7,6 +7,7 @@ use App\Models\Employe;
 use App\Models\Projet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ProjetController extends Controller
 {
@@ -349,7 +350,7 @@ class ProjetController extends Controller
         }
     }
 
-    public function getProjetsMembre()
+    public function getProjetsMembre($id)
     {
         try {
             // Vérifier que l'utilisateur est authentifié
@@ -364,11 +365,11 @@ class ProjetController extends Controller
             }
 
             // Récupérer tous les projets auxquels l'utilisateur est membre
-            $projets = Projet::with(['chefs', 'membres']) // Charger les relations chefs et membres
-                ->whereHas('membres', function ($query) use ($user) {
-                    $query->where('id', $user->id);
+            $projets = Projet::with(['chefs', 'membres'])
+                ->whereHas('membres', function ($query) use ($id) {
+                    $query->where('membre_projet.employe_id', $id); // Utilisez le nom de la table ici
                 })
-                ->where('entreprise_id', $user->entreprise_id)
+                ->where('projets.entreprise_id', $user->entreprise_id)
                 ->get();
 
             // Vérifier si des projets ont été trouvés
@@ -376,7 +377,6 @@ class ProjetController extends Controller
                 return response()->json(['message' => 'Aucun projet trouvé pour cet utilisateur.'], 404);
             }
 
-            // Retourner la liste des projets avec tous les détails
             return response()->json([
                 'message' => 'Liste des projets récupérée avec succès.',
                 'data' => $projets,
@@ -388,6 +388,47 @@ class ProjetController extends Controller
             ], 500);
         }
     }
+
+    public function getProjetsChefs($id)
+    {
+        try {
+        // Vérifier que l'utilisateur est authentifié
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['error' => 'Utilisateur non authentifié'], 401);
+        }
+
+        // Vérifier si l'utilisateur est un administrateur ou un employé
+        if (!($user instanceof Administrateur || $user instanceof Employe)) {
+            return response()->json(['error' => 'Utilisateur non autorisé'], 403);
+        }
+
+        // Récupérer tous les projets auxquels l'utilisateur est chef
+        $projets = Projet::with(['chefs', 'membres'])
+            ->whereHas('chefs', function ($query) use ($id) {
+                $query->where('chef_projet.employe_id', $id); // Utilisez le nom de la table ici
+            })
+            ->where('projets.entreprise_id', $user->entreprise_id)
+            ->get();
+
+        // Vérifier si des projets ont été trouvés
+        if ($projets->isEmpty()) {
+            return response()->json(['message' => 'Aucun projet trouvé pour cet utilisateur.'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Liste des projets récupérée avec succès.',
+            'data' => $projets,
+        ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Une erreur est survenue lors de la récupération des projets.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function modifierProjet(Request $request, $id)
     {
         try {

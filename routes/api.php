@@ -34,4 +34,7 @@ Route::middleware('auth:sanctum')->put('employes/profile', [EmployeController::c
 Route::middleware('auth:sanctum')->post('employes/change-password', [EmployeController::class, 'changePassword']);
 
 Route::middleware('auth:sanctum')->post('projets',[ProjetController::class, 'creerProjet']);
-Route::middleware('auth:sanctum')->get('/entreprises/{id_entreprise}/projets', [ProjetController::class, 'getAll']);
+Route::middleware('auth:sanctum')->get('entreprises/{id_entreprise}/projets', [ProjetController::class, 'getAll']);
+Route::middleware('auth:sanctum')->get('entreprises/projets/{id}/projets-membre', [ProjetController::class, 'getProjetsMembre']);
+Route::middleware('auth:sanctum')->get('entreprises/projets/{id}/projets-chefs', [ProjetController::class, 'getProjetsChefs']);
+Route::middleware('auth:sanctum')->delete('entreprises/projets/{projet_id}', [ProjetController::class, 'supprimerProjet']);

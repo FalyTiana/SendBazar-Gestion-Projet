@@ -28,8 +28,8 @@ class Employe extends Model
         return $this->belongsTo(Entreprise::class);
     }
 
-    // Mutator pour hacher le mot de passe automatiquement
     public function setMotDePasseAttribute($value)
+    // Mutator pour hacher le mot de passe automatiquement
     {
         $this->attributes['mot_de_passe'] = Hash::make($value);
     }
