@@ -10,7 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Employe extends Model
 {
-    use HasApiTokens,HasFactory, HasApiTokens;
+    use HasApiTokens,HasFactory;
 
     protected $fillable = ['nom', 'email', 'telephone', 'poste', 'mot_de_passe', 'entreprise_id'];
     protected $attributes = [

@@ -38,4 +38,16 @@ class Projet extends Model
 
         return $this->with($relations);
     }
+
+    // Event for deleting related pivot entries
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($projet) {
+            // Detach all related chefs and membres
+            $projet->chefs()->detach();
+            $projet->membres()->detach();
+        });
+    }
 }

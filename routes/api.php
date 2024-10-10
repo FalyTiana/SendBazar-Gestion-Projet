@@ -38,3 +38,8 @@ Route::middleware('auth:sanctum')->get('entreprises/{id_entreprise}/projets', [P
 Route::middleware('auth:sanctum')->get('entreprises/projets/{id}/projets-membre', [ProjetController::class, 'getProjetsMembre']);
 Route::middleware('auth:sanctum')->get('entreprises/projets/{id}/projets-chefs', [ProjetController::class, 'getProjetsChefs']);
 Route::middleware('auth:sanctum')->delete('entreprises/projets/{projet_id}', [ProjetController::class, 'supprimerProjet']);
+Route::middleware('auth:sanctum')->put('entreprises/projets/{projet_id}', [ProjetController::class, 'ajouterMembres']);
+
+Route::middleware('auth:sanctum')->get('entreprises/projets/{id}/projets-chefs/{id_projet}', [ProjetController::class, 'getProjetChef']);
+Route::middleware('auth:sanctum')->put('entreprises/projets/{id_employe}/{id}', [ProjetController::class, 'modifierProjet']);
+Route::middleware('auth:sanctum')->put('entreprises/projet/{projet_id}/membre-retire', [ProjetController::class, 'retirerMembre']);

@@ -90,6 +90,11 @@ class ProjetController extends Controller
                 'membres' => $membres ?? null
             ], 201);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la création de projets.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la création de projets.',
@@ -167,11 +172,11 @@ class ProjetController extends Controller
 
             // Vérifier que l'utilisateur fait partie de l'entreprise du projet
             if ($user->entreprise_id != $projet->entreprise_id) {
-                return response()->json(['error' => 'Vous n\'êtes pas autorisé à modifier ce projet'], 403);
+                return response()->json(['error' => 'Vous n\'êtes pas autorisé à modifier ce projet  '], 403);
             }
 
             // Vérifier si l'utilisateur est chef de projet
-            if (!$projet->chefs()->where('id', $user->id)->exists()) {
+            if (!($user instanceof Administrateur || $projet->chefs()->where('id', $user->id)->exists())) {
                 return response()->json(['error' => 'Vous devez être un chef de projet pour retirer un membre'], 403);
             }
 
@@ -235,8 +240,8 @@ class ProjetController extends Controller
                 return response()->json(['error' => 'Le nombre maximum de chefs de projet est atteint (3)'], 400);
             }
 
-            // Ajouter le chef au projet
-            $projet->chefs()->attach($request->chef_id);
+            // Ajouter le chef au projet sans retirer les existants et sans doublons
+            $projet->chefs()->syncWithoutDetaching($request->chef_id);
 
             return response()->json([
                 'message' => 'Chef ajouté avec succès au projet',
@@ -392,35 +397,34 @@ class ProjetController extends Controller
     public function getProjetsChefs($id)
     {
         try {
-        // Vérifier que l'utilisateur est authentifié
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['error' => 'Utilisateur non authentifié'], 401);
-        }
+            // Vérifier que l'utilisateur est authentifié
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['error' => 'Utilisateur non authentifié'], 401);
+            }
 
-        // Vérifier si l'utilisateur est un administrateur ou un employé
-        if (!($user instanceof Administrateur || $user instanceof Employe)) {
-            return response()->json(['error' => 'Utilisateur non autorisé'], 403);
-        }
+            // Vérifier si l'utilisateur est un administrateur ou un employé
+            if (!($user instanceof Administrateur || $user instanceof Employe)) {
+                return response()->json(['error' => 'Utilisateur non autorisé'], 403);
+            }
 
-        // Récupérer tous les projets auxquels l'utilisateur est chef
-        $projets = Projet::with(['chefs', 'membres'])
-            ->whereHas('chefs', function ($query) use ($id) {
-                $query->where('chef_projet.employe_id', $id); // Utilisez le nom de la table ici
-            })
-            ->where('projets.entreprise_id', $user->entreprise_id)
-            ->get();
+            // Récupérer tous les projets auxquels l'utilisateur est chef
+            $projets = Projet::with(['chefs', 'membres'])
+                ->whereHas('chefs', function ($query) use ($id) {
+                    $query->where('chef_projet.employe_id', $id); // Utilisez le nom de la table ici
+                })
+                ->where('projets.entreprise_id', $user->entreprise_id)
+                ->get();
 
-        // Vérifier si des projets ont été trouvés
-        if ($projets->isEmpty()) {
-            return response()->json(['message' => 'Aucun projet trouvé pour cet utilisateur.'], 404);
-        }
+            // Vérifier si des projets ont été trouvés
+            if ($projets->isEmpty()) {
+                return response()->json(['message' => 'Aucun projet trouvé pour cet utilisateur.'], 404);
+            }
 
-        return response()->json([
-            'message' => 'Liste des projets récupérée avec succès.',
-            'data' => $projets,
-        ], 200);
-
+            return response()->json([
+                'message' => 'Liste des projets récupérée avec succès.',
+                'data' => $projets,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la récupération des projets.',
@@ -429,7 +433,48 @@ class ProjetController extends Controller
         }
     }
 
-    public function modifierProjet(Request $request, $id)
+    public function getProjetChef($id, $id_projet)
+    {
+        try {
+            // Vérifier que l'utilisateur est authentifié
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['error' => 'Utilisateur non authentifié'], 401);
+            }
+
+            // Vérifier si l'utilisateur est un administrateur ou un employé
+            if (!($user instanceof Administrateur || $user instanceof Employe)) {
+                return response()->json(['error' => 'Utilisateur non autorisé'], 403);
+            }
+
+            // Récupérer le projet où l'utilisateur est chef et qui correspond à l'id_projet
+            $projet = Projet::with(['chefs', 'membres'])
+                ->whereHas('chefs', function ($query) use ($id) {
+                    $query->where('chef_projet.employe_id', $id); // Filtrer sur l'employé
+                })
+                ->where('projets.id', $id_projet)  // Filtrer sur le projet spécifique
+                ->where('projets.entreprise_id', $user->entreprise_id)  // S'assurer que le projet appartient à l'entreprise de l'utilisateur
+                ->first(); // Récupérer un seul projet
+
+            // Vérifier si le projet a été trouvé
+            if (!$projet) {
+                return response()->json(['message' => 'Projet non trouvé pour cet utilisateur.'], 404);
+            }
+
+            return response()->json([
+                'message' => 'Projet récupéré avec succès.',
+                'data' => $projet,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Une erreur est survenue lors de la récupération du projet.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function modifierProjet(Request $request, $id_employe, $id)
     {
         try {
             // Vérifier que l'utilisateur est authentifié
@@ -440,8 +485,8 @@ class ProjetController extends Controller
 
             // Vérifier que l'utilisateur est un chef de projet
             $isChef = Projet::where('id', $id)
-                ->whereHas('chefs', function ($query) use ($user) {
-                    $query->where('id', $user->id);
+                ->whereHas('chefs', function ($query) use ($id_employe) {
+                    $query->where('chef_projet.employe_id', $id_employe);
                 })
                 ->exists();
 
