@@ -226,7 +226,7 @@ class ProjetController extends Controller
             }
 
             // Vérifier si l'utilisateur est chef de projet
-            if (!$projet->chefs()->where('id', $user->id)->exists()) {
+            if (!($user instanceof Administrateur ||$projet->chefs()->where('id', $user->id)->exists())) {
                 return response()->json(['error' => 'Vous devez être un chef de projet pour ajouter un chef'], 403);
             }
 
@@ -281,7 +281,7 @@ class ProjetController extends Controller
             }
 
             // Vérifier si l'utilisateur est chef de projet
-            if (!$projet->chefs()->where('id', $user->id)->exists()) {
+            if (!($user instanceof Administrateur || $projet->chefs()->where('id', $user->id)->exists())) {
                 return response()->json(['error' => 'Vous devez être un chef de projet pour retirer un chef'], 403);
             }
 
