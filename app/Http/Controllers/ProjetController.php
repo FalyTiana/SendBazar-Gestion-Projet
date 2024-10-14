@@ -143,6 +143,12 @@ class ProjetController extends Controller
                 'membres' => $request->membres
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de l\'ajout des membres.',
+                $e->getMessage()
+            );
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors de l\'ajout des membres.',
                 'error' => $e->getMessage(),
@@ -193,6 +199,12 @@ class ProjetController extends Controller
                 'projet' => $projet,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors du retrait du membre.',
+                $e->getMessage()
+            );
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors du retrait du membre.',
                 'error' => $e->getMessage(),
@@ -226,7 +238,7 @@ class ProjetController extends Controller
             }
 
             // Vérifier si l'utilisateur est chef de projet
-            if (!($user instanceof Administrateur ||$projet->chefs()->where('id', $user->id)->exists())) {
+            if (!($user instanceof Administrateur || $projet->chefs()->where('id', $user->id)->exists())) {
                 return response()->json(['error' => 'Vous devez être un chef de projet pour ajouter un chef'], 403);
             }
 
@@ -248,6 +260,12 @@ class ProjetController extends Controller
                 'projet' => $projet,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de l\'ajout du chef.',
+                $e->getMessage()
+            );
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors de l\'ajout du chef.',
                 'error' => $e->getMessage(),
@@ -304,6 +322,12 @@ class ProjetController extends Controller
                 'projet' => $projet,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors du retrait du chef.',
+                $e->getMessage()
+            );
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors du retrait du chef.',
                 'error' => $e->getMessage(),
@@ -347,6 +371,12 @@ class ProjetController extends Controller
                 'data' => $projets,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la récupération des projets.',
+                $e->getMessage()
+            );
+
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la récupération des projets.',
@@ -387,6 +417,12 @@ class ProjetController extends Controller
                 'data' => $projets,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la récupération des projets.',
+                $e->getMessage()
+            );
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la récupération des projets.',
                 'error' => $e->getMessage(),
@@ -426,6 +462,12 @@ class ProjetController extends Controller
                 'data' => $projets,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la récupération des projets.',
+                $e->getMessage()
+            );
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la récupération des projets.',
                 'error' => $e->getMessage(),
@@ -466,6 +508,12 @@ class ProjetController extends Controller
                 'data' => $projet,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la récupération du projet.',
+                $e->getMessage()
+            );
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la récupération du projet.',
                 'error' => $e->getMessage(),
@@ -519,6 +567,12 @@ class ProjetController extends Controller
                 'projet' => $projet,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la modification du projet.',
+                $e->getMessage()
+            );
+
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la modification du projet.',
                 'error' => $e->getMessage(),
@@ -553,6 +607,12 @@ class ProjetController extends Controller
             // Retourner la réponse de succès
             return response()->json(['message' => 'Projet supprimé avec succès'], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la suppression du projet.',
+                $e->getMessage()
+            );
+
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la suppression du projet.',

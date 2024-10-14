@@ -10,7 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Employe extends Model
 {
-    use HasApiTokens,HasFactory;
+    use HasApiTokens, HasFactory;
 
     protected $fillable = ['nom', 'email', 'telephone', 'poste', 'mot_de_passe', 'entreprise_id'];
     protected $attributes = [
@@ -45,4 +45,8 @@ class Employe extends Model
         return $this->belongsToMany(Projet::class, 'membre_projet');
     }
 
+    public function taches()
+    {
+        return $this->morphMany(Tache::class, 'assignable');
+    }
 }

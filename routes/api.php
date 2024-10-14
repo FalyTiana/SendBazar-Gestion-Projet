@@ -7,6 +7,7 @@ use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\AdministrateursController;
 use App\Http\Controllers\EmployeController;
 use App\Http\Controllers\ProjetController;
+use App\Http\Controllers\TacheController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -45,3 +46,12 @@ Route::middleware('auth:sanctum')->get('entreprises/projets/{id}/projets-chefs/{
 Route::middleware('auth:sanctum')->put('entreprises/projets/{id_employe}/{id}', [ProjetController::class, 'modifierProjet']);
 Route::middleware('auth:sanctum')->put('entreprises/projet/{projet_id}/membre-retire', [ProjetController::class, 'retirerMembre']);
 Route::middleware('auth:sanctum')->put('entreprises/projet/{projet_id}/chef-retire', [ProjetController::class, 'retirerChef']);
+
+
+Route::middleware('auth:sanctum')->prefix('projets/{projet_id}')->group(function () {
+    Route::get('taches', [TacheController::class, 'index']);
+    Route::post('taches', [TacheController::class, 'store']);
+    Route::get('taches/{id}', [TacheController::class, 'show']);
+    Route::put('taches/{id}', [TacheController::class, 'update']);
+    Route::delete('taches/{id}', [TacheController::class, 'destroy']);
+});

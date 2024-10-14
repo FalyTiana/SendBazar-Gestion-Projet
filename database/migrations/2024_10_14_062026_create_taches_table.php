@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('projets', function (Blueprint $table) {
+        Schema::create('taches', function (Blueprint $table) {
             $table->id();
             $table->string('titre');
-            $table->string('date_debut')->nullable();
-            $table->string('date_fin')->nullable();
             $table->string('description')->nullable();
-            $table->foreignId('entreprise_id')->constrained('entreprises')->onDelete('cascade');
+            $table->date('date_debut')->nullable();
+            $table->date('date_fin')->nullable();
+            $table->foreignId('projet_id')->constrained()->onDelete('cascade');
+            
+            // Relation polymorphique pour assigner la tâche à un employé (membre ou chef de projet)
+            $table->morphs('assignable');
+
             $table->timestamps();
         });
     }
@@ -27,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('projets');
+        Schema::dropIfExists('taches');
     }
 };

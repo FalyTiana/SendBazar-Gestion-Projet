@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class AdministrateursController extends Controller
 {
@@ -78,6 +79,11 @@ class AdministrateursController extends Controller
                 'administrateur' => $administrateur
             ]);
         } catch (\Exception $e) {
+            Log::error(
+                'Une erreur est survenue lors de changer l\' info de l\'administrateur',
+                $e->getMessage()
+            );
+
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',
@@ -122,6 +128,11 @@ class AdministrateursController extends Controller
 
             return response()->json(['message' => 'Mot de passe mis à jour avec succès'], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de changer le mot de passe de l\'administrateur',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',
@@ -148,6 +159,12 @@ class AdministrateursController extends Controller
                 'entreprise' => $administrateur->entreprise
             ]);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de récuperation de l\'informations de l\'entreprise.',
+                $e->getMessage()
+            );
+
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',
@@ -167,6 +184,11 @@ class AdministrateursController extends Controller
             'message' => 'Informations de l\'administrateur récupérées avec succès',
             'administrateur' => $administrateur
         ]);} catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de récuperation de l\'informations de l\'administrateur',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',

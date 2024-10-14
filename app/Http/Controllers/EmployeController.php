@@ -8,6 +8,7 @@ use App\Models\Entreprise;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class EmployeController extends Controller
 {
@@ -64,6 +65,11 @@ class EmployeController extends Controller
                 'data' => $employes,
             ], 200);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la récupération des employés.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la récupération des employés.',
@@ -127,6 +133,11 @@ class EmployeController extends Controller
                 'message' => 'Employe supprimés avec succès'
             ], 200); // Retourner une réponse 200 en cas de succès
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la suppression de employé.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',
@@ -196,6 +207,10 @@ class EmployeController extends Controller
                 'administrateur' => $employe
             ]);
         } catch (\Exception $e) {
+            Log::error(
+                'Une erreur est survenue lors de la modification profile de employé.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',
@@ -243,6 +258,10 @@ class EmployeController extends Controller
 
             return response()->json(['message' => 'Mot de passe mis à jour avec succès'], 200);
         } catch (\Exception $e) {
+            Log::error(
+                'Une erreur est survenue lors de la changer le mot de passe de l\'employé',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',

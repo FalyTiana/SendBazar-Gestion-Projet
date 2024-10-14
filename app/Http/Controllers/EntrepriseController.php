@@ -6,6 +6,7 @@ use App\Models\AdministrateurSupeur;
 use App\Models\Entreprise;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class EntrepriseController extends Controller
 {
@@ -35,6 +36,10 @@ class EntrepriseController extends Controller
                 'entreprise_id' => $entreprise->id
             ]);
         } catch (\Exception $e) {
+            Log::error(
+                'Une erreur est survenue lors de la création de l\'entreprise.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la création de l\'entreprise.',
@@ -62,6 +67,10 @@ class EntrepriseController extends Controller
                 'entreprises' => $entreprises
             ]);
         } catch (\Exception $e) {
+            Log::error(
+                'Une erreur est survenue lors de la récupération des entreprise.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la récupération des entreprise.',
@@ -104,6 +113,11 @@ class EntrepriseController extends Controller
                 'entreprise' => $entreprise
             ]);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la modification de l\'entreprise.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la modification de l\'entreprise.',
@@ -145,6 +159,10 @@ class EntrepriseController extends Controller
                 'message' => 'Entreprise et administrateurs supprimés avec succès'
             ], 200); // Retourner une réponse 200 en cas de succès
         } catch (\Exception $e) {
+            Log::error(
+                'Une erreur est survenue lors de la suppression de entreprise.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',

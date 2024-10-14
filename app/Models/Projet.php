@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Projet extends Model
 {
@@ -31,6 +32,12 @@ class Projet extends Model
         return $this->belongsToMany(Employe::class, 'membre_projet');
     }
 
+    // Un projet a plusieurs tâches
+    public function taches(): HasMany
+    {
+        return $this->hasMany(Tache::class);
+    }
+
     // Fonction pour obtenir toutes les relations définies
     public function loadAllRelations()
     {
@@ -48,6 +55,9 @@ class Projet extends Model
             // Detach all related chefs and membres
             $projet->chefs()->detach();
             $projet->membres()->detach();
+
+            // Supprimer les tâches liées au projet
+            $projet->taches()->delete();
         });
     }
 }

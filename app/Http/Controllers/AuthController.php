@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
@@ -141,6 +142,10 @@ class AuthController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            Log::error(
+                'Une erreur est survenue lors de la création du compte..',
+                $e->getMessage()
+            );
             // Gérer les autres erreurs, comme l'email déjà utilisé
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la création du compte. Veuillez réessayer plus tard.',
@@ -243,6 +248,12 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Identifiants incorrects'], 401);
             }
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la connection',
+                $e->getMessage()
+            );
+
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',
@@ -269,6 +280,11 @@ class AuthController extends Controller
 
             return response()->json(['message' => 'Non authentifié'], 401);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la déconnexion.',
+                $e->getMessage()
+            );
             // Gérer les erreurs
             return response()->json([
                 'message' => 'Une erreur est survenue',
@@ -351,6 +367,12 @@ L'équipe de gestion de {$administrateur->entreprise->nom}",
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+
+            Log::error(
+                'Une erreur est survenue lors de la création du compte employé',
+                $e->getMessage()
+            );
+
             // Gérer les autres erreurs, comme l'email déjà utilisé
             return response()->json([
                 'message' => 'Une erreur est survenue lors de la création du compte. Veuillez réessayer plus tard.',
